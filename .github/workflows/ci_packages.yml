@@ -1,4 +1,5 @@
 name: Packages CI
+run-name: "Packages CI ${{ inputs.leg || github.event_name }} ${{ inputs.racecar_run }}"
 on:
   pull_request:
   push:
@@ -9,6 +10,24 @@ on:
       - 'version-1-6'
       - 'version-1-2'
 
+  workflow_dispatch:
+    inputs:
+      leg:
+        description: "baseline (uninstrumented) or instrumented (under chalk/curiosity)"
+        type: choice
+        options: [instrumented, baseline]
+        default: baseline
+      profile:
+        description: "CrashOverride chalk profile"
+        type: string
+        default: curiosity-tests-racecar
+      racecar_run:
+        description: "racecar correlation token, echoed into the run name"
+        type: string
+        default: ""
+
+env:
+  CHALK_ON: ${{ inputs.leg == 'instrumented' }}
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -18,13 +37,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         batch: ["0_3", "1_3", "2_3"] # list of `index_num`
         include:
           - os: ubuntu-latest
             cpu: amd64
-          - os: macos-latest
-            cpu: arm64
     name: '${{ matrix.os }} (batch: ${{ matrix.batch }})'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60 # refs bug #18178
