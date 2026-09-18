@@ -11,28 +11,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-latest, macos-latest]
+        platform:
+        - ubuntu-latest
     name: ${{ matrix.platform }}-bisects
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
 
-      - name: Install OpenSSL (Windows)
-        if: |
-          runner.os == 'Windows'
-        run: choco install openssl.light --version=1.1.1.0  # OpenSSL 3.x removed SSL_library_init
-        shell: 'powershell'
+    - name: Install OpenSSL (Windows)
+      if: |
+        runner.os == 'Windows'
+      run: choco install openssl.light --version=1.1.1.0    # OpenSSL 3.x removed SSL_library_init
+      shell: 'powershell'
 
       # v2 wont work here, because uses "hardcoded" nim versions, action "dynamically" finds version with bug.
-      - uses: jiro4989/setup-nim-action@v1  
-        with:
-          nim-version: 'devel'
+    - uses: jiro4989/setup-nim-action@v1
+      with:
+        nim-version: 'devel'
 
-      - uses: juancarlospaco/nimrun-action@nim
-        if: |
-          runner.os == 'Linux'   && contains(github.event.comment.body, '-d:linux'  ) ||
-          runner.os == 'Windows' && contains(github.event.comment.body, '-d:windows') ||
-          runner.os == 'macOS'   && contains(github.event.comment.body, '-d:osx'    ) ||
-          runner.os == 'Linux' && !contains(github.event.comment.body, '-d:linux') && !contains(github.event.comment.body, '-d:windows') && !contains(github.event.comment.body, '-d:osx')
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: juancarlospaco/nimrun-action@nim
+      if: |
+        runner.os == 'Linux'   && contains(github.event.comment.body, '-d:linux'  ) ||
+        runner.os == 'Windows' && contains(github.event.comment.body, '-d:windows') ||
+        runner.os == 'macOS'   && contains(github.event.comment.body, '-d:osx'    ) ||
+        runner.os == 'Linux' && !contains(github.event.comment.body, '-d:linux') && !contains(github.event.comment.body, '-d:windows') && !contains(github.event.comment.body, '-d:osx')
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
